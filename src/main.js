@@ -1,8 +1,9 @@
 import * as XLSX from 'xlsx';
 import './style.css';
 
-let serperKey = localStorage.getItem('serper_api_key') || '';
-let groqKey = localStorage.getItem('groq_api_key') || '';
+// API Configuration - Using relative path for Vercel Serverless compatibility
+const API_BASE = '/api';
+
 let currentMode = 'single';
 let uploadedHeaders = [];
 let companyNames = [];
@@ -10,17 +11,6 @@ let allResults = [];
 
 // Initialize
 document.addEventListener('DOMContentLoaded', () => {
-  if (serperKey) {
-    const input = document.getElementById('serpKey');
-    if (input) input.value = serperKey;
-    setStatus('serpCard', 'serpStatus', 'SAVED ✓', 'ok');
-  }
-  if (groqKey) {
-    const input = document.getElementById('groqKey');
-    if (input) input.value = groqKey;
-    setStatus('groqCard', 'groqStatus', 'SAVED ✓', 'ok');
-  }
-
   const companyInput = document.getElementById('companyInput');
   if (companyInput) {
     companyInput.addEventListener('keydown', (e) => {
@@ -47,55 +37,20 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 });
 
-window.saveSerp = function() {
-  const k = document.getElementById('serpKey').value.trim();
-  if (!k || k.length < 8) { alert('Valid Serper.dev key daalo'); return; }
-  serperKey = k;
-  localStorage.setItem('serper_api_key', k);
-  setStatus('serpCard', 'serpStatus', 'SAVED ✓', 'ok');
-}
-
-window.saveGroq = function() {
-  const k = document.getElementById('groqKey').value.trim();
-  if (!k || !k.startsWith('gsk_')) { alert('Valid Groq key daalo (gsk_...)'); return; }
-  groqKey = k;
-  localStorage.setItem('groq_api_key', k);
-  setStatus('groqCard', 'groqStatus', 'SAVED ✓', 'ok');
-}
-
-function setStatus(cardId, statusId, text, cls) {
-  const card = document.getElementById(cardId);
-  const status = document.getElementById(statusId);
-  if (!card || !status) return;
-  card.className = 'api-card ' + (cls === 'ok' ? 'connected' : cls === 'fail' ? 'error-state' : '');
-  status.className = 'api-status ' + cls;
-  status.textContent = text;
-}
-
-window.toggleVis = function(id) { 
-  const i = document.getElementById(id); 
-  i.type = i.type === 'password' ? 'text' : 'password'; 
-}
-
-function getSerperKey() { return serperKey || document.getElementById('serpKey').value.trim(); }
-function getGroqKey() { return groqKey || document.getElementById('groqKey').value.trim(); }
-
+// Tab Switcher
 window.switchTab = function(t) {
   currentMode = t;
-  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
-  document.getElementById('btn-' + t).classList.add('active');
-  document.getElementById('panel-' + t).classList.add('active');
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('bg-brand-green', 'text-white'));
+  document.querySelectorAll('.panel').forEach(p => p.classList.add('hidden'));
+  document.getElementById('btn-' + t).classList.add('bg-brand-green', 'text-white');
+  document.getElementById('panel-' + t).classList.remove('hidden');
   hideResults();
 }
 
+// Single Research Handler
 window.searchSingle = async function() {
   const name = document.getElementById('companyInput').value.trim();
   if (!name) return showErr('singleError', 'Company ka naam daalo!');
-
-  const sk = getSerperKey(), gk = getGroqKey();
-  if (!sk) return showErr('singleError', 'Serper.dev API key save karo!');
-  if (!gk) return showErr('singleError', 'Groq key save karo!');
 
   hideErr('singleError');
   const searchBtn = document.getElementById('searchBtn');
@@ -104,7 +59,7 @@ window.searchSingle = async function() {
   hideResults();
 
   try {
-    const result = await researchCompany(name, null, sk, gk);
+    const result = await researchCompany(name, null);
     allResults = [result];
     renderCards([result]);
   } catch(e) {
@@ -128,30 +83,31 @@ function processFile(file) {
       companyNames = rows.slice(1).map(r => String(r[0] || '').trim()).filter(Boolean);
 
       document.getElementById('fileName').textContent = file.name;
-      document.getElementById('fileStats').textContent = `${companyNames.length} records · ${uploadedHeaders.length} columns`;
-      document.getElementById('fileInfo').classList.add('show');
+      document.getElementById('fileStats').textContent = `${companyNames.length} leads pending research`;
+      document.getElementById('fileInfo').classList.remove('hidden');
+      document.getElementById('fileInfo').classList.add('flex');
 
-      document.getElementById('hdrPreview').style.display = 'block';
-      document.getElementById('hdrTags').innerHTML = uploadedHeaders.map(h => `<span class="htag">${h}</span>`).join('');
+      document.getElementById('hdrPreview').classList.remove('hidden');
+      document.getElementById('hdrTags').innerHTML = uploadedHeaders.map(h => `<span class="badge-tag ring-1 ring-brand-green/20">${h}</span>`).join('');
 
-      document.getElementById('coPreview').style.display = 'block';
+      document.getElementById('coPreview').classList.remove('hidden');
       const prev = companyNames.slice(0, 5);
       document.getElementById('coList').innerHTML =
-        prev.map((n, i) => `<div class="crow"><span class="rn">${i+2}</span>${n}</div>`).join('') +
-        (companyNames.length > 5 ? `<div style="color:var(--muted);font-size:11px;padding:5px 0;text-align:center">...+aur ${companyNames.length - 5} companies</div>` : '');
+        prev.map((n, i) => `<div class="flex items-center gap-3 p-3 bg-white border border-brand-border rounded-xl text-sm"><span class="text-brand-green font-bold text-xs">#${i+1}</span> ${n}</div>`).join('') +
+        (companyNames.length > 5 ? `<div class="text-xs text-brand-muted text-center pt-2 italic">...+${companyNames.length - 5} records in queue</div>` : '');
 
       document.getElementById('bulkBtn').disabled = false;
       hideErr('excelError');
-    } catch(err) { showErr('excelError', 'File error: ' + err.message); }
+    } catch(err) { showErr('excelError', 'File Error: ' + err.message); }
   };
   file.name.endsWith('.csv') ? reader.readAsBinaryString(file) : reader.readAsArrayBuffer(file);
 }
 
 window.clearFile = function() {
   uploadedHeaders = []; companyNames = [];
-  document.getElementById('fileInfo').classList.remove('show');
-  document.getElementById('hdrPreview').style.display = 'none';
-  document.getElementById('coPreview').style.display = 'none';
+  document.getElementById('fileInfo').classList.add('hidden');
+  document.getElementById('hdrPreview').classList.add('hidden');
+  document.getElementById('coPreview').classList.add('hidden');
   document.getElementById('bulkBtn').disabled = true;
   document.getElementById('fileInput').value = '';
   hideErr('excelError');
@@ -159,15 +115,12 @@ window.clearFile = function() {
 
 window.doBulk = async function() {
   if (!companyNames.length) return;
-  const sk = getSerperKey(), gk = getGroqKey();
-  if (!sk) return showErr('excelError', 'Serper.dev API key save karo!');
-  if (!gk) return showErr('excelError', 'Groq key save karo!');
-
   document.getElementById('bulkBtn').disabled = true;
   allResults = []; hideResults(); hideErr('excelError');
 
-  const pb = document.getElementById('pbar'), pf = document.getElementById('pfill');
-  pb.style.display = 'block';
+  const pf = document.getElementById('pfill');
+  const loadingDiv = document.getElementById('loadingDiv');
+  loadingDiv.classList.remove('hidden');
 
   for (let i = 0; i < companyNames.length; i++) {
     const name = companyNames[i];
@@ -175,9 +128,8 @@ window.doBulk = async function() {
     pf.style.width = ((i / companyNames.length) * 100) + '%';
 
     try {
-      allResults.push(await researchCompany(name, uploadedHeaders, sk, gk));
+      allResults.push(await researchCompany(name, uploadedHeaders));
     } catch(e) {
-      console.error(e);
       allResults.push({ 'Company Name': name, 'Error': e.message });
     }
 
@@ -186,178 +138,112 @@ window.doBulk = async function() {
 
   pf.style.width = '100%';
   hideLoad();
-  pb.style.display = 'none';
   document.getElementById('bulkBtn').disabled = false;
   renderCards(allResults);
 }
 
-async function researchCompany(company, headers, sk, gk) {
+// ── RESEARCH ORCHESTRATOR ───────────────────────────
+async function researchCompany(company, headers) {
   setLoadStep(1);
-  const searchData = await serperSearch(company, sk);
+  const searchData = await search11za(company);
 
   setLoadStep(2);
-  const result = await groqExtract(company, searchData, headers, gk);
+  const result = await extract11za(company, searchData, headers);
   return result;
 }
 
-async function serperSearch(company, apiKey) {
+// ── SEARCH THROUGH PROXY ─────────────────────────────
+async function search11za(company) {
   let combined = '';
-
-  const queries = [
-    `"${company}" official website email phone contact`,
-    `"${company}" linkedin facebook instagram`
-  ];
+  const queries = [`"${company}" official contact website email phone`, `"${company}" locals linkedin socials`];
 
   for (const q of queries) {
     try {
-      const resp = await fetch('https://google.serper.dev/search', {
+      const resp = await fetch(`${API_BASE}/search`, {
         method: 'POST',
-        headers: {
-          'X-API-KEY': apiKey,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ q, num: 5, hl: 'en', gl: 'in' })
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ q })
       });
-
-      if (!resp.ok) {
-        if (resp.status === 401) throw new Error('Serper: Key Invalid');
-        if (resp.status === 403) throw new Error('Serper: Limit Hit');
-        continue;
-      }
-
+      if (!resp.ok) continue;
+      
       const data = await resp.json();
-
-      // Knowledge Graph
       if (data.knowledgeGraph) {
         const kg = data.knowledgeGraph;
-        combined += `[KNOWLEDGE GRAPH]\nName: ${kg.title}\nWebsite: ${kg.website}\nPhone: ${kg.phoneNumber}\nAddress: ${kg.address}\nDescription: ${kg.description}\n`;
-        if (kg.attributes) {
-            Object.entries(kg.attributes).forEach(([k, v]) => combined += `${k}: ${v}\n`);
-        }
-        snippets += '\n';
+        combined += `[INTEL] ${kg.title} | ${kg.website} | ${kg.phoneNumber} | ${kg.description}\n`;
       }
-
-      // Answer Box
-      if (data.answerBox) {
-        const ab = data.answerBox;
-        combined += `[ANSWER BOX] ${ab.title || ''} | ${ab.answer || ab.snippet}\n\n`;
-      }
-
-      // Organic
-      (data.organic || []).slice(0, 5).forEach(r => {
-        combined += `[WEB] ${r.title} | ${r.link}\nText: ${r.snippet}\n\n`;
-      });
-      
-    } catch(e) {
-      console.warn("Serper Query Failed", q, e);
-      if (e.message.includes('Serper')) throw e;
-    }
-    await new Promise(r => setTimeout(r, 400));
+      (data.organic || []).slice(0, 4).forEach(r => combined += `[WEB] ${r.snippet}\n\n`);
+    } catch(e) { console.warn(e); }
   }
-
-  return combined || `No live search data found for "${company}".`;
+  return combined || `Limited data found for ${company}.`;
 }
 
-async function groqExtract(company, context, headers, apiKey) {
-  const defaultFields = [
-    'Website URL', 'Official Email', 'Phone Number',
-    'LinkedIn URL', 'Facebook URL', 'Instagram URL', 'Twitter/X URL',
-    'Company Address', 'Industry / Sector', 'Founded Year',
-    'CEO / Founder Name', 'Number of Employees', 'Short Description'
-  ];
+// ── EXTRACTION THROUGH PROXY ─────────────────────────
+async function extract11za(company, context, headers) {
+  const fields = (headers && headers.length > 1) ? headers.slice(1) : ['Website', 'Email', 'Phone', 'LinkedIn', 'Description'];
 
-  const fields = (headers && headers.length > 1) ? headers.slice(1) : defaultFields;
-
-  const prompt = `Extract company details from the search results provided. Use N/A if not found. Return JSON only.
-
-Target Company: "${company}"
-
-SEARCH RESULTS:
-${context.slice(0, 4000)}
-
-SCHEMA:
-{
-  "Company Name": "${company}",
-  ${fields.map(f => `"${f}": "value"`).join(',\n  ')}
-}`;
-
-  const resp = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+  const resp = await fetch(`${API_BASE}/extract`, {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${apiKey}`
-    },
+    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
-      model: 'llama-3.3-70b-versatile',
-      messages: [{ role: 'user', content: prompt }],
-      temperature: 0.1,
+      messages: [
+        { role: 'system', content: 'You are 11za Intelligence Engine. Extract company data from search results. JSON only.' },
+        { role: 'user', content: `Target: "${company}"\nContext: ${context.slice(0, 3000)}\nSchema keys: ${fields.join(', ')}` }
+      ],
       response_format: { type: 'json_object' }
     })
   });
-
-  if (!resp.ok) throw new Error(`Groq Error ${resp.status}`);
-
+  
+  if (!resp.ok) throw new Error(`Backend Engine Error ${resp.status}`);
   const data = await resp.json();
   const raw = data?.choices?.[0]?.message?.content || '{}';
-
   try {
     const parsed = JSON.parse(raw);
     parsed['Company Name'] = parsed['Company Name'] || company;
     return parsed;
-  } catch (e) {
-    return { 'Company Name': company, 'Status': 'Parse Error', 'Raw': raw.slice(0, 200) };
-  }
+  } catch (e) { return { 'Company Name': company, 'Status': 'Manual Verification Needed' }; }
 }
 
 function renderCards(results) {
   const c = document.getElementById('cardsDiv');
   c.innerHTML = '';
   document.getElementById('rcount').textContent = results.length;
-  document.getElementById('resultsDiv').classList.add('show');
+  document.getElementById('resultsDiv').classList.remove('hidden');
 
   results.forEach((r, idx) => {
-    const name = r['Company Name'] || 'Unknown Enterprise';
+    const name = r['Company Name'] || 'Business Record';
     const fields = Object.entries(r).filter(([k]) => k !== 'Company Name');
     const card = document.createElement('div');
-    card.className = 'company-card';
-    card.style.animationDelay = (idx * 0.08) + 's';
+    card.className = 'glass-card overflow-hidden animate-slide-up';
+    card.style.animationDelay = `${idx * 0.05}s`;
     
     card.innerHTML = `
-      <div class="card-head">
+      <div class="px-8 py-6 bg-slate-50/50 border-b border-brand-border flex justify-between items-center">
         <div>
-          <div class="cname"><span class="sdot"></span>${name}</div>
-          <div class="cname"><small>${fields.length} data points extracted · #${idx+1}</small></div>
+          <h3 class="text-xl font-bold text-brand-navy">💬 ${name}</h3>
+          <p class="text-xs text-brand-muted mt-0.5">${fields.length} data points extracted · #${idx+1}</p>
         </div>
-        <div class="data-source-badge live">🌐 SERPER.DEV LIVE SEARCH</div>
+        <div class="px-4 py-1.5 bg-emerald-50 text-emerald-600 text-[10px] font-bold rounded-full ring-1 ring-emerald-200">11ZA VERIFIED</div>
       </div>
-      <div class="fgrid">
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-px bg-slate-100">
         ${fields.map(([k, v]) => `
-          <div class="fitem">
-            <div class="flabel">${k}</div>
-            <div class="fval ${isNA(v) ? 'na' : ''}">${fmtVal(k, v)}</div>
+          <div class="p-6 bg-white hover:bg-slate-50 transition-colors">
+            <span class="block text-[10px] font-bold text-brand-muted uppercase tracking-widest mb-2">${k}</span>
+            <span class="text-sm text-brand-navy font-medium ${isNA(v) ? 'italic text-slate-400 font-normal' : ''}">${fmtVal(k, v)}</span>
           </div>`).join('')}
       </div>`;
     c.appendChild(card);
   });
-
-  const section = document.getElementById('resultsDiv');
-  if (section) section.scrollIntoView({ behavior: 'smooth' });
 }
 
-function isNA(v) { return !v || ['N/A','n/a','NA','null','undefined',''].includes(String(v).trim()); }
+function isNA(v) { return !v || ['N/A','n/a','NA','null','undefined','not found'].includes(String(v).trim().toLowerCase()); }
 
 function fmtVal(key, val) {
   if (isNA(val)) return 'N/A';
-  const k = key.toLowerCase();
-  const v = String(val);
-  const isHttp = v.startsWith('http');
-  if (k.includes('website')) return `<a href="${isHttp?v:'https://'+v}" target="_blank">🌐 Website</a>`;
-  if (k.includes('linkedin')) return `<a href="${isHttp?v:'https://linkedin.com/company/'+v}" target="_blank">💼 LinkedIn</a>`;
-  if (k.includes('facebook')) return `<a href="${isHttp?v:'https://facebook.com/'+v}" target="_blank">📘 Facebook</a>`;
-  if (k.includes('instagram')) return `<a href="${isHttp?v:'https://instagram.com/'+v}" target="_blank">📸 Instagram</a>`;
-  if (k.includes('twitter') || k.includes('x url')) return `<a href="${isHttp?v:'https://x.com/'+v}" target="_blank">🐦 X / Twitter</a>`;
-  if (k.includes('email')) return `<a href="mailto:${v}">✉️ ${v}</a>`;
-  if (k.includes('phone') || k.includes('number')) return `📞 ${v}`;
+  const k = key.toLowerCase(), v = String(val), h = v.startsWith('http');
+  if (k.includes('website')) return `<a href="${h?v:'https://'+v}" target="_blank" class="text-brand-green font-bold">Launch Site</a>`;
+  if (k.includes('linkedin')) return `<a href="${h?v:'https://linkedin.com/company/'+v}" target="_blank" class="text-brand-green">View Handle</a>`;
+  if (k.includes('email')) return `<a href="mailto:${v}" class="text-brand-green">${v}</a>`;
+  if (k.includes('phone') || k.includes('number')) return `<span class="text-brand-navy">📞 ${v}</span>`;
   return v;
 }
 
@@ -369,34 +255,25 @@ window.downloadXlsx = function() {
   const rows = [ordered, ...allResults.map(r => ordered.map(k => r[k] || 'N/A'))];
   const wb = XLSX.utils.book_new();
   const ws = XLSX.utils.aoa_to_sheet(rows);
-  ws['!cols'] = ordered.map(() => ({ wch: 30 }));
-  XLSX.utils.book_append_sheet(wb, ws, 'Intelligence Report');
-  XLSX.writeFile(wb, `Company_Intel_Serper_${new Date().toISOString().slice(0,10)}.xlsx`);
+  XLSX.utils.book_append_sheet(wb, ws, 'Insight Report');
+  XLSX.writeFile(wb, `11za_Corporate_Intelligence.xlsx`);
 }
 
-window.clearResults = function() {
-  allResults = [];
-  hideResults();
-  document.getElementById('cardsDiv').innerHTML = '';
-}
-
+window.clearResults = function() { allResults = []; hideResults(); document.getElementById('cardsDiv').innerHTML = ''; }
 function setLoadStep(step) {
-  const s1 = document.getElementById('step1');
-  const s2 = document.getElementById('step2');
+  const s1 = document.getElementById('step1'), s2 = document.getElementById('step2');
   if (!s1 || !s2) return;
-  s1.className = 'load-step ' + (step > 1 ? 'done' : step === 1 ? 'active' : '');
-  s2.className = 'load-step ' + (step > 2 ? 'done' : step === 2 ? 'active' : '');
+  s1.classList.toggle('text-brand-green', step >= 1);
+  s1.classList.toggle('font-bold', step === 1);
+  s2.classList.toggle('text-brand-green', step >= 2);
+  s2.classList.toggle('font-bold', step === 2);
 }
-
 function showLoad(name, idx, total) {
-  const el = document.getElementById('loadCompany');
-  if (el) el.textContent = total ? `(${idx+1}/${total}) ${name}` : name;
-  document.getElementById('loadingDiv').classList.add('show');
-  document.getElementById('pbar').style.display = total ? 'block' : 'none';
+  document.getElementById('loadCompany').textContent = total ? `INTELLIGENCE: ${name} (${idx+1}/${total})` : `HUNTING: ${name}`;
+  document.getElementById('loadingDiv').classList.remove('hidden');
   setLoadStep(1);
 }
-
-function hideLoad() { document.getElementById('loadingDiv').classList.remove('show'); }
-function showErr(id, m) { const e = document.getElementById(id); if(e){ e.textContent = '❌ ' + m; e.classList.add('show'); } }
-function hideErr(id) { document.getElementById(id)?.classList.remove('show'); }
-function hideResults() { document.getElementById('resultsDiv').classList.remove('show'); }
+function hideLoad() { document.getElementById('loadingDiv').classList.add('hidden'); }
+function showErr(id, m) { const e = document.getElementById(id); if(e){ e.textContent = '🛡️ ' + m; e.classList.remove('hidden'); } }
+function hideErr(id) { document.getElementById(id)?.classList.add('hidden'); }
+function hideResults() { document.getElementById('resultsDiv').classList.add('hidden'); }
