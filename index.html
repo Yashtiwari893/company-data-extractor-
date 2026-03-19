@@ -3,49 +3,49 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Company Data Hunter | Live Web Intelligence</title>
-  <meta name="description" content="AI-driven company data discovery powered by SerpApi Google search and Groq intelligence. Research any business instantly.">
+  <title>Company Data Hunter | Serper.dev Cloud Intelligence</title>
+  <meta name="description" content="AI-driven company data discovery powered by Serper.dev Google search and Groq intelligence. Local SMB and enterprise data hunter.">
 </head>
 <body>
 <div class="container">
 
   <!-- HEADER -->
   <header class="header">
-    <div class="badge">🌐 LIVE GOOGLE SEARCH · GROQ EXTRACT · REAL DATA</div>
+    <div class="badge">🌐 SERPER.DEV · 2500 GOOGLE SEARCHES · GROQ EXTRACTION</div>
     <h1>Company<br>Data Hunter</h1>
-    <p>We search the live web via SerpApi and extract business intelligence using Groq. Deep research, even for small businesses.</p>
+    <p>Real Google search via Serper.dev and AI extraction via Groq. Deep intelligence on any business, even local boutiques and startups.</p>
   </header>
 
   <!-- HOW IT WORKS FLOW -->
   <div class="flow">
     <div class="flow-step"><span class="num">1</span> Identify Target</div>
     <div class="flow-arrow">→</div>
-    <div class="flow-step"><span class="num">2</span> 🌐 SerpApi Search</div>
+    <div class="flow-step"><span class="num">2</span> 🌐 Serper.dev Search</div>
     <div class="flow-arrow">→</div>
     <div class="flow-step"><span class="num">3</span> ⚡ Groq Extraction</div>
     <div class="flow-arrow">→</div>
-    <div class="flow-step"><span class="num">4</span> 📊 High Quality Results</div>
+    <div class="flow-step"><span class="num">4</span> 📊 Reliable XLSX Export</div>
   </div>
 
   <!-- API CONFIGURATION GRID -->
   <section class="api-grid">
-    <!-- SerpApi Configuration -->
+    <!-- Serper.dev Configuration -->
     <div class="api-card" id="serpCard">
       <div class="api-card-header">
-        <div class="api-logo serpapi">🌐</div>
+        <div class="api-logo serper">🌐</div>
         <div class="api-card-info">
-          <h3>SerpApi — Live Search</h3>
-          <p>Maps the real-time web</p>
+          <h3>Serper.dev — Google Live</h3>
+          <p>2500 monthly searches ✅</p>
         </div>
         <span class="api-status idle" id="serpStatus">NOT SET</span>
       </div>
       <div class="api-input-row">
-        <input type="password" class="api-input" id="serpKey" placeholder="SerpApi Key (xxxxxxx...)">
+        <input type="password" class="api-input" id="serpKey" placeholder="Serper API Key (dash.serper.dev)">
         <button class="btn-primary" onclick="window.saveSerp()" style="padding: 10px 18px; font-size: 13px;">Save</button>
         <button class="btn-sm" onclick="window.toggleVis('serpKey')">👁</button>
       </div>
       <div class="api-hint">
-        ↳ Get free key: <a href="https://serpapi.com/manage-api-key" target="_blank">serpapi.com</a>. 100 free searches/month. No CC required.
+        ↳ Get free key: <a href="https://serper.dev" target="_blank">serper.dev</a>. No credit card required. Best for browser-direct Google search.
       </div>
     </div>
 
@@ -54,7 +54,7 @@
       <div class="api-card-header">
         <div class="api-logo groq">⚡</div>
         <div class="api-card-info">
-          <h3>Groq — AI Engine</h3>
+          <h3>Groq — AI Intelligence</h3>
           <p>Llama 3.3 70B extraction</p>
         </div>
         <span class="api-status idle" id="groqStatus">NOT SET</span>
@@ -65,20 +65,20 @@
         <button class="btn-sm" onclick="window.toggleVis('groqKey')">👁</button>
       </div>
       <div class="api-hint">
-        ↳ Get free key: <a href="https://console.groq.com/keys" target="_blank">console.groq.com</a>. 500 req/day. No CC required.
+        ↳ Get free key: <a href="https://console.groq.com/keys" target="_blank">console.groq.com</a>. Ultrafast extraction speed.
       </div>
     </div>
   </section>
 
   <!-- NAVIGATION TABS -->
   <nav class="tabs">
-    <button class="tab-btn active" onclick="window.switchTab('single')" id="btn-single">🔍 Quick Check</button>
-    <button class="tab-btn" onclick="window.switchTab('excel')" id="btn-excel">📊 Excel Batch Sync</button>
+    <button class="tab-btn active" onclick="window.switchTab('single')" id="btn-single">🔍 Quick Scan</button>
+    <button class="tab-btn" onclick="window.switchTab('excel')" id="btn-excel">📊 Excel Growth Sync</button>
   </nav>
 
   <!-- SINGLE SEARCH PANEL -->
   <main class="panel active" id="panel-single">
-    <div class="panel-title"><div class="picon">🔍</div> Business Intelligence</div>
+    <div class="panel-title"><div class="picon">🔍</div> Company Intel Scan</div>
     <div class="search-row">
       <input type="text" class="search-input" id="companyInput"
              placeholder="e.g. Divisa Herbals, Zomato, Reliance Industries, Google India..."
@@ -93,14 +93,14 @@
 
   <!-- EXCEL BATCH PANEL -->
   <section class="panel" id="panel-excel">
-    <div class="panel-title"><div class="picon">📊</div> Batch Research Queue</div>
+    <div class="panel-title"><div class="picon">📊</div> Bulk Research Queue</div>
     <p style="color:var(--muted); font-size:13px; margin-bottom:20px; line-height:1.7;">
-      Upload Excel: <strong style="color:var(--text)">Column A contains Company Names</strong>. Other headers will be mapped to AI extraction points.
+      Upload Excel: <strong style="color:var(--text)">Column A contains Company Names</strong>. The tool will automatically hunt for contact data across Google.
     </p>
 
     <div class="upload-area" id="uploadArea" onclick="document.getElementById('fileInput').click()">
       <div class="upload-icon">📂</div>
-      <h3>Drop Business List</h3>
+      <h3>Drop Prospect List</h3>
       <p>Supports .xlsx, .xls, .csv</p>
     </div>
     <input type="file" id="fileInput" accept=".xlsx,.xls,.csv" aria-label="Upload File">
@@ -126,12 +126,12 @@
 
     <div style="margin-top:24px;">
       <button class="btn-primary" onclick="window.doBulk()" id="bulkBtn" disabled style="width: 100%; justify-content: center">
-        🚀 Start Batch Extraction
+        🚀 Start Batch Research
       </button>
     </div>
 
     <div class="infobox">
-      ✅ **Deep Web Crawl:** We perform real Google searches via SerpApi—Divisa Herbals or local SMBs will be found! ⚡ ~3 sec delay applied in batch mode.
+      ✅ **Serper.dev Live Search:** Real Google data ensures even "Divisa Herbals" jaisi local companies ka data milega. 2500/month free = HUGE capacity! ⚡ 2 sec batch delay for stability.
     </div>
     <div class="err" id="excelError"></div>
   </section>
@@ -147,8 +147,8 @@
     </div>
     <div class="load-company" id="loadCompany"></div>
     <div class="load-steps">
-      <div class="load-step" id="step1">🌐 Google Search Phase</div>
-      <div class="load-step" id="step2">⚡ AI Extraction Phase</div>
+      <div class="load-step" id="step1">🌐 Google Search (Serper.dev)</div>
+      <div class="load-step" id="step2">⚡ AI Extraction (Groq)</div>
     </div>
     <div class="pbar" id="pbar"><div class="pfill" id="pfill"></div></div>
   </div>
@@ -158,7 +158,7 @@
     <div class="action-bar">
       <div class="rcount"><strong id="rcount">0</strong> companies researched</div>
       <div style="display: flex; gap: 10px;">
-        <button class="btn-secondary" onclick="window.downloadXlsx()">⬇️ Export XLSX</button>
+        <button class="btn-secondary" onclick="window.downloadXlsx()">⬇️ Download XLSX</button>
         <button class="btn-secondary" onclick="window.clearResults()">🗑️ Reset</button>
       </div>
     </div>

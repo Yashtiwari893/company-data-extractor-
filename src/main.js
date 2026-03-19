@@ -1,7 +1,7 @@
 import * as XLSX from 'xlsx';
 import './style.css';
 
-let serpKey = localStorage.getItem('serp_api_key') || '';
+let serperKey = localStorage.getItem('serper_api_key') || '';
 let groqKey = localStorage.getItem('groq_api_key') || '';
 let currentMode = 'single';
 let uploadedHeaders = [];
@@ -10,12 +10,14 @@ let allResults = [];
 
 // Initialize
 document.addEventListener('DOMContentLoaded', () => {
-  if (serpKey) {
-    document.getElementById('serpKey').value = serpKey;
+  if (serperKey) {
+    const input = document.getElementById('serpKey');
+    if (input) input.value = serperKey;
     setStatus('serpCard', 'serpStatus', 'SAVED ✓', 'ok');
   }
   if (groqKey) {
-    document.getElementById('groqKey').value = groqKey;
+    const input = document.getElementById('groqKey');
+    if (input) input.value = groqKey;
     setStatus('groqCard', 'groqStatus', 'SAVED ✓', 'ok');
   }
 
@@ -47,9 +49,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
 window.saveSerp = function() {
   const k = document.getElementById('serpKey').value.trim();
-  if (!k || k.length < 10) { alert('Valid SerpApi key daalo'); return; }
-  serpKey = k;
-  localStorage.setItem('serp_api_key', k);
+  if (!k || k.length < 8) { alert('Valid Serper.dev key daalo'); return; }
+  serperKey = k;
+  localStorage.setItem('serper_api_key', k);
   setStatus('serpCard', 'serpStatus', 'SAVED ✓', 'ok');
 }
 
@@ -75,7 +77,7 @@ window.toggleVis = function(id) {
   i.type = i.type === 'password' ? 'text' : 'password'; 
 }
 
-function getSerpKey() { return serpKey || document.getElementById('serpKey').value.trim(); }
+function getSerperKey() { return serperKey || document.getElementById('serpKey').value.trim(); }
 function getGroqKey() { return groqKey || document.getElementById('groqKey').value.trim(); }
 
 window.switchTab = function(t) {
@@ -91,8 +93,8 @@ window.searchSingle = async function() {
   const name = document.getElementById('companyInput').value.trim();
   if (!name) return showErr('singleError', 'Company ka naam daalo!');
 
-  const sk = getSerpKey(), gk = getGroqKey();
-  if (!sk) return showErr('singleError', 'SerpApi key save karo!');
+  const sk = getSerperKey(), gk = getGroqKey();
+  if (!sk) return showErr('singleError', 'Serper.dev API key save karo!');
   if (!gk) return showErr('singleError', 'Groq key save karo!');
 
   hideErr('singleError');
@@ -157,8 +159,8 @@ window.clearFile = function() {
 
 window.doBulk = async function() {
   if (!companyNames.length) return;
-  const sk = getSerpKey(), gk = getGroqKey();
-  if (!sk) return showErr('excelError', 'SerpApi key save karo!');
+  const sk = getSerperKey(), gk = getGroqKey();
+  if (!sk) return showErr('excelError', 'Serper.dev API key save karo!');
   if (!gk) return showErr('excelError', 'Groq key save karo!');
 
   document.getElementById('bulkBtn').disabled = true;
@@ -179,7 +181,7 @@ window.doBulk = async function() {
       allResults.push({ 'Company Name': name, 'Error': e.message });
     }
 
-    if (i < companyNames.length - 1) await new Promise(r => setTimeout(r, 3000));
+    if (i < companyNames.length - 1) await new Promise(r => setTimeout(r, 2000));
   }
 
   pf.style.width = '100%';
@@ -191,64 +193,69 @@ window.doBulk = async function() {
 
 async function researchCompany(company, headers, sk, gk) {
   setLoadStep(1);
-  const searchData = await googleSearch(company, sk);
+  const searchData = await serperSearch(company, sk);
 
   setLoadStep(2);
   const result = await groqExtract(company, searchData, headers, gk);
   return result;
 }
 
-async function googleSearch(company, apiKey) {
-  const queries = [
-    `${company} official website contact email phone`,
-    `${company} linkedin facebook instagram social media profile`
-  ];
+async function serperSearch(company, apiKey) {
+  let combined = '';
 
-  let snippets = '';
+  const queries = [
+    `"${company}" official website email phone contact`,
+    `"${company}" linkedin facebook instagram`
+  ];
 
   for (const q of queries) {
     try {
-      // NOTE: SerpApi often requires CORS proxy if called directly from browser.
-      // For Demo purposes, we assume environment allows it or proxy is used.
-      const url = `https://serpapi.com/search.json?q=${encodeURIComponent(q)}&api_key=${apiKey}&num=5&hl=en`;
-      const resp = await fetch(url);
-      
+      const resp = await fetch('https://google.serper.dev/search', {
+        method: 'POST',
+        headers: {
+          'X-API-KEY': apiKey,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ q, num: 5, hl: 'en', gl: 'in' })
+      });
+
       if (!resp.ok) {
-        if (resp.status === 401 || resp.status === 403) throw new Error('SerpApi: Key Invalid');
-        if (resp.status === 429) throw new Error('SerpApi: Quota Limit Hit');
+        if (resp.status === 401) throw new Error('Serper: Key Invalid');
+        if (resp.status === 403) throw new Error('Serper: Limit Hit');
         continue;
       }
 
       const data = await resp.json();
-      
-      // Organic results
-      (data.organic_results || []).slice(0, 4).forEach(r => {
-        snippets += `[WEB] ${r.title} | ${r.link}\n${r.snippet}\n\n`;
-      });
 
       // Knowledge Graph
-      if (data.knowledge_graph) {
-        const kg = data.knowledge_graph;
-        snippets += `[KNOWLEDGE GRAPH]\nName: ${kg.title}\nWebsite: ${kg.website}\nPhone: ${kg.phone}\nAddress: ${kg.address}\nDescription: ${kg.description}\n`;
-        if (kg.social_profiles) {
-          kg.social_profiles.forEach(s => snippets += `${s.name}: ${s.link}\n`);
+      if (data.knowledgeGraph) {
+        const kg = data.knowledgeGraph;
+        combined += `[KNOWLEDGE GRAPH]\nName: ${kg.title}\nWebsite: ${kg.website}\nPhone: ${kg.phoneNumber}\nAddress: ${kg.address}\nDescription: ${kg.description}\n`;
+        if (kg.attributes) {
+            Object.entries(kg.attributes).forEach(([k, v]) => combined += `${k}: ${v}\n`);
         }
         snippets += '\n';
       }
 
       // Answer Box
-      if (data.answer_box) {
-        snippets += `[ANSWER BOX] ${data.answer_box.answer || data.answer_box.snippet}\n\n`;
+      if (data.answerBox) {
+        const ab = data.answerBox;
+        combined += `[ANSWER BOX] ${ab.title || ''} | ${ab.answer || ab.snippet}\n\n`;
       }
+
+      // Organic
+      (data.organic || []).slice(0, 5).forEach(r => {
+        combined += `[WEB] ${r.title} | ${r.link}\nText: ${r.snippet}\n\n`;
+      });
       
     } catch(e) {
-      console.warn("Search Query Failed", q, e);
-      if (e.message.includes('SerpApi')) throw e;
+      console.warn("Serper Query Failed", q, e);
+      if (e.message.includes('Serper')) throw e;
     }
-    await new Promise(r => setTimeout(r, 600));
+    await new Promise(r => setTimeout(r, 400));
   }
 
-  return snippets || `Search Results for "${company}": No organic data found. Proceeding with limited intel.`;
+  return combined || `No live search data found for "${company}".`;
 }
 
 async function groqExtract(company, context, headers, apiKey) {
@@ -261,14 +268,14 @@ async function groqExtract(company, context, headers, apiKey) {
 
   const fields = (headers && headers.length > 1) ? headers.slice(1) : defaultFields;
 
-  const prompt = `System: Extract current company information from the search snippets provided. Use N/A if missing. Return JSON only.
+  const prompt = `Extract company details from the search results provided. Use N/A if not found. Return JSON only.
 
-Company: "${company}"
+Target Company: "${company}"
 
-SEARCH CONTEXT:
-${context}
+SEARCH RESULTS:
+${context.slice(0, 4000)}
 
-JSON SCHEMA:
+SCHEMA:
 {
   "Company Name": "${company}",
   ${fields.map(f => `"${f}": "value"`).join(',\n  ')}
@@ -298,7 +305,7 @@ JSON SCHEMA:
     parsed['Company Name'] = parsed['Company Name'] || company;
     return parsed;
   } catch (e) {
-    return { 'Company Name': company, 'Status': 'Manual Verification Needed', 'Snippet': raw.slice(0, 300) };
+    return { 'Company Name': company, 'Status': 'Parse Error', 'Raw': raw.slice(0, 200) };
   }
 }
 
@@ -321,7 +328,7 @@ function renderCards(results) {
           <div class="cname"><span class="sdot"></span>${name}</div>
           <div class="cname"><small>${fields.length} data points extracted · #${idx+1}</small></div>
         </div>
-        <div class="data-source-badge live">🌐 LIVE SEARCH DATA</div>
+        <div class="data-source-badge live">🌐 SERPER.DEV LIVE SEARCH</div>
       </div>
       <div class="fgrid">
         ${fields.map(([k, v]) => `
@@ -333,7 +340,8 @@ function renderCards(results) {
     c.appendChild(card);
   });
 
-  document.getElementById('resultsSection')?.scrollIntoView({ behavior: 'smooth' });
+  const section = document.getElementById('resultsDiv');
+  if (section) section.scrollIntoView({ behavior: 'smooth' });
 }
 
 function isNA(v) { return !v || ['N/A','n/a','NA','null','undefined',''].includes(String(v).trim()); }
@@ -358,13 +366,12 @@ window.downloadXlsx = function() {
   const keys = new Set();
   allResults.forEach(r => Object.keys(r).forEach(k => keys.add(k)));
   const ordered = ['Company Name', ...Array.from(keys).filter(k => k !== 'Company Name')];
-  
   const rows = [ordered, ...allResults.map(r => ordered.map(k => r[k] || 'N/A'))];
   const wb = XLSX.utils.book_new();
   const ws = XLSX.utils.aoa_to_sheet(rows);
   ws['!cols'] = ordered.map(() => ({ wch: 30 }));
   XLSX.utils.book_append_sheet(wb, ws, 'Intelligence Report');
-  XLSX.writeFile(wb, `Company_Intel_${new Date().toISOString().slice(0,10)}.xlsx`);
+  XLSX.writeFile(wb, `Company_Intel_Serper_${new Date().toISOString().slice(0,10)}.xlsx`);
 }
 
 window.clearResults = function() {
