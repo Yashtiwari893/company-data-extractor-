@@ -37,16 +37,6 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 });
 
-// Tab Switcher
-window.switchTab = function(t) {
-  currentMode = t;
-  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('bg-brand-green', 'text-white'));
-  document.querySelectorAll('.panel').forEach(p => p.classList.add('hidden'));
-  document.getElementById('btn-' + t).classList.add('bg-brand-green', 'text-white');
-  document.getElementById('panel-' + t).classList.remove('hidden');
-  hideResults();
-}
-
 // Single Research Handler
 window.searchSingle = async function() {
   const name = document.getElementById('companyInput').value.trim();
@@ -83,7 +73,7 @@ function processFile(file) {
       companyNames = rows.slice(1).map(r => String(r[0] || '').trim()).filter(Boolean);
 
       document.getElementById('fileName').textContent = file.name;
-      document.getElementById('fileStats').textContent = `${companyNames.length} leads pending research`;
+      document.getElementById('fileStats').textContent = `${companyNames.length} leads pending deep-scan`;
       document.getElementById('fileInfo').classList.remove('hidden');
       document.getElementById('fileInfo').classList.add('flex');
 
@@ -145,39 +135,37 @@ window.doBulk = async function() {
 // ── RESEARCH ORCHESTRATOR ───────────────────────────
 async function researchCompany(company, headers) {
   setLoadStep(1);
-  const searchData = await search11za(company);
+  const searchResults = await search11za(company);
+  
+  // Combine KG results if backend found them for direct parsing aid
+  let combinedContext = searchResults.context;
+  if (searchResults.knowledgeGraph) {
+    const kg = searchResults.knowledgeGraph;
+    combinedContext = `[VERIFIED KNOWLEDGE GRAPH] Name: ${kg.title} Web: ${kg.website} Phone: ${kg.phoneNumber}\n${combinedContext}`;
+  }
 
   setLoadStep(2);
-  const result = await extract11za(company, searchData, headers);
+  const result = await extract11za(company, combinedContext, headers);
   return result;
 }
 
-// ── SEARCH THROUGH PROXY ─────────────────────────────
+// ── SEARCH THROUGH SECURE PROXY ──────────────────────
 async function search11za(company) {
-  let combined = '';
-  const queries = [`"${company}" official contact website email phone`, `"${company}" locals linkedin socials`];
-
-  for (const q of queries) {
-    try {
-      const resp = await fetch(`${API_BASE}/search`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ q })
-      });
-      if (!resp.ok) continue;
-      
-      const data = await resp.json();
-      if (data.knowledgeGraph) {
-        const kg = data.knowledgeGraph;
-        combined += `[INTEL] ${kg.title} | ${kg.website} | ${kg.phoneNumber} | ${kg.description}\n`;
-      }
-      (data.organic || []).slice(0, 4).forEach(r => combined += `[WEB] ${r.snippet}\n\n`);
-    } catch(e) { console.warn(e); }
+  try {
+    const resp = await fetch(`${API_BASE}/search`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ q: company })
+    });
+    if (!resp.ok) throw new Error(`Search Node Error ${resp.status}`);
+    return await resp.json();
+  } catch(e) { 
+    console.warn(e); 
+    return { context: `No data found for ${company} due to network error.` }; 
   }
-  return combined || `Limited data found for ${company}.`;
 }
 
-// ── EXTRACTION THROUGH PROXY ─────────────────────────
+// ── EXTRACTION THROUGH SECURE PROXY ──────────────────
 async function extract11za(company, context, headers) {
   const fields = (headers && headers.length > 1) ? headers.slice(1) : ['Website', 'Email', 'Phone', 'LinkedIn', 'Description'];
 
@@ -186,8 +174,14 @@ async function extract11za(company, context, headers) {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
       messages: [
-        { role: 'system', content: 'You are 11za Intelligence Engine. Extract company data from search results. JSON only.' },
-        { role: 'user', content: `Target: "${company}"\nContext: ${context.slice(0, 3000)}\nSchema keys: ${fields.join(', ')}` }
+        { 
+          role: 'system', 
+          content: 'You are 11za Intelligence Engine. You have massive deep-scan context. Your job is to find contact details, official websites, and social media from the multi-node data provided. If multiple are found, pick the most verified one. Response must be JSON only.' 
+        },
+        { 
+          role: 'user', 
+          content: `Target: "${company}"\nDEEP-SCAN CONTEXT: ${context.slice(0, 8000)}\nREQUIRED SCHEMA KEYS: ${fields.join(', ')}` 
+        }
       ],
       response_format: { type: 'json_object' }
     })
@@ -200,7 +194,7 @@ async function extract11za(company, context, headers) {
     const parsed = JSON.parse(raw);
     parsed['Company Name'] = parsed['Company Name'] || company;
     return parsed;
-  } catch (e) { return { 'Company Name': company, 'Status': 'Manual Verification Needed' }; }
+  } catch (e) { return { 'Company Name': company, 'Status': 'Manual Verify' }; }
 }
 
 function renderCards(results) {
@@ -210,7 +204,7 @@ function renderCards(results) {
   document.getElementById('resultsDiv').classList.remove('hidden');
 
   results.forEach((r, idx) => {
-    const name = r['Company Name'] || 'Business Record';
+    const name = r['Company Name'] || 'Enterprise Node';
     const fields = Object.entries(r).filter(([k]) => k !== 'Company Name');
     const card = document.createElement('div');
     card.className = 'glass-card overflow-hidden animate-slide-up';
@@ -220,9 +214,9 @@ function renderCards(results) {
       <div class="px-8 py-6 bg-slate-50/50 border-b border-brand-border flex justify-between items-center">
         <div>
           <h3 class="text-xl font-bold text-brand-navy">💬 ${name}</h3>
-          <p class="text-xs text-brand-muted mt-0.5">${fields.length} data points extracted · #${idx+1}</p>
+          <p class="text-xs text-brand-muted mt-0.5">${fields.length} insights derived via Deep-Scan · #${idx+1}</p>
         </div>
-        <div class="px-4 py-1.5 bg-emerald-50 text-emerald-600 text-[10px] font-bold rounded-full ring-1 ring-emerald-200">11ZA VERIFIED</div>
+        <div class="px-4 py-1.5 bg-emerald-50 text-emerald-600 text-[10px] font-bold rounded-full ring-1 ring-emerald-200">11ZA DEEP-SCAN VERIFIED</div>
       </div>
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-px bg-slate-100">
         ${fields.map(([k, v]) => `
@@ -255,21 +249,20 @@ window.downloadXlsx = function() {
   const rows = [ordered, ...allResults.map(r => ordered.map(k => r[k] || 'N/A'))];
   const wb = XLSX.utils.book_new();
   const ws = XLSX.utils.aoa_to_sheet(rows);
-  XLSX.utils.book_append_sheet(wb, ws, 'Insight Report');
-  XLSX.writeFile(wb, `11za_Corporate_Intelligence.xlsx`);
+  XLSX.utils.book_append_sheet(wb, ws, 'Intelligence Report');
+  XLSX.writeFile(wb, `11za_Corporate_Report.xlsx`);
 }
 
 window.clearResults = function() { allResults = []; hideResults(); document.getElementById('cardsDiv').innerHTML = ''; }
 function setLoadStep(step) {
   const s1 = document.getElementById('step1'), s2 = document.getElementById('step2');
   if (!s1 || !s2) return;
-  s1.classList.toggle('text-brand-green', step >= 1);
-  s1.classList.toggle('font-bold', step === 1);
-  s2.classList.toggle('text-brand-green', step >= 2);
-  s2.classList.toggle('font-bold', step === 2);
+  s1.className = step >= 1 ? 'flex items-center gap-2 transition-all text-brand-green font-bold' : 'flex items-center gap-2 transition-all';
+  s2.className = step >= 2 ? 'flex items-center gap-2 transition-all text-brand-green font-bold' : 'flex items-center gap-2 transition-all';
 }
 function showLoad(name, idx, total) {
-  document.getElementById('loadCompany').textContent = total ? `INTELLIGENCE: ${name} (${idx+1}/${total})` : `HUNTING: ${name}`;
+  const l = document.getElementById('loadCompany');
+  if (l) l.textContent = total ? `DEEP-SCAN: ${name} (${idx+1}/${total})` : `HUNTING: ${name}`;
   document.getElementById('loadingDiv').classList.remove('hidden');
   setLoadStep(1);
 }
