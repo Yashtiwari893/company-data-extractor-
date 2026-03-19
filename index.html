@@ -89,10 +89,13 @@
         <h2 class="text-2xl font-bold">Bulk Lead Research</h2>
       </div>
       
-      <div id="uploadArea" class="border-2 border-dashed border-slate-200 rounded-3xl p-16 text-center hover:border-brand-green hover:bg-brand-green/[0.02] cursor-pointer transition-all bg-slate-50/30">
-        <div class="text-5xl mb-4 grayscale hover:grayscale-0 transition-all">📂</div>
+      <div id="uploadArea" onclick="document.getElementById('fileInput').click()" class="border-2 border-dashed border-slate-200 rounded-3xl p-12 text-center hover:border-brand-green hover:bg-brand-green/[0.02] cursor-pointer transition-all bg-slate-50/30 group">
+        <div class="text-5xl mb-4 grayscale group-hover:grayscale-0 transition-all">📂</div>
         <h3 class="text-xl font-bold mb-2">Drop Prospect Spreadsheet</h3>
-        <p class="text-brand-muted font-medium">Column A should contain Company Names. Supports .xlsx, .xls, .csv</p>
+        <p class="text-brand-muted font-medium mb-6">Column A should contain Company Names. Supports .xlsx, .xls, .csv</p>
+        <button class="bg-white border border-brand-border text-brand-navy font-bold px-6 py-2.5 rounded-xl hover:bg-slate-100 transition-colors shadow-sm">
+          Or Select File Manually
+        </button>
       </div>
       <input type="file" id="fileInput" accept=".xlsx,.xls,.csv" class="hidden">
 
