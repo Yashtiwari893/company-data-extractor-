@@ -35,36 +35,30 @@
     </div>
   </div>
 
-  <!-- NAVIGATION TABS -->
-  <div class="flex justify-center p-2 mb-10 bg-white/50 backdrop-blur-sm border border-brand-border rounded-2xl w-fit mx-auto shadow-sm">
-    <button id="btn-single" onclick="window.switchTab('single')" class="tab-btn active">🔍 Quick Target Scan</button>
-    <button id="btn-excel" onclick="window.switchTab('excel')" class="tab-btn">📊 Bulk Intelligence Queue</button>
-  </div>
-
-  <!-- PANELS -->
-  <div class="space-y-8">
+  <!-- UNIFIED DASHBOARD LAYOUT -->
+  <div class="space-y-12">
     
-    <!-- SINGLE SEARCH -->
-    <section id="panel-single" class="panel glass-card p-10 active">
+    <!-- SINGLE SCAN SECTION -->
+    <section id="panel-single" class="glass-card p-10 block">
       <div class="flex items-center gap-3 mb-8">
         <div class="p-2 bg-brand-green/5 text-brand-green rounded-lg ring-1 ring-brand-green/20">🔍</div>
-        <h2 class="text-2xl font-bold">Business Intelligence Research</h2>
+        <h2 class="text-2xl font-bold">Quick Target Intelligence</h2>
       </div>
       
       <div class="flex flex-col md:flex-row gap-4">
         <div class="flex-1 relative group">
-          <input type="text" id="companyInput" placeholder="Enter Company Name to Start Research..." 
+          <input type="text" id="companyInput" placeholder="Enter Company Name to Scan..." 
                  class="w-full text-xl font-medium px-6 py-5 rounded-2xl bg-slate-50 border-2 border-slate-100 focus:border-brand-green focus:bg-white outline-none transition-all shadow-inner group-hover:border-slate-200">
         </div>
         <button id="searchBtn" onclick="window.searchSingle()" class="btn-primary flex items-center justify-center gap-2 whitespace-nowrap min-w-[200px]">
-          Generate Profile <span class="text-xl">→</span>
+          Research Target <span class="text-xl">→</span>
         </button>
       </div>
       <div id="singleError" class="mt-4 p-4 rounded-xl bg-red-50 text-red-600 border border-red-100 hidden"></div>
     </section>
 
-    <!-- EXCEL BATCH -->
-    <section id="panel-excel" class="panel glass-card p-10">
+    <!-- BULK SCAN SECTION -->
+    <section id="panel-excel" class="glass-card p-10 block">
       <div class="flex items-center gap-3 mb-8">
         <div class="p-2 bg-brand-green/5 text-brand-green rounded-lg ring-1 ring-brand-green/20">📊</div>
         <h2 class="text-2xl font-bold">Bulk Asset Extraction</h2>
