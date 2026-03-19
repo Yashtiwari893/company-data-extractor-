@@ -3,129 +3,166 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Groq Company Data Hunter | Fast AI Research</title>
-  <meta name="description" content="Lightning-fast company intelligence powered by Groq Llama 3.3. Get instant business contact info, social links, and depth reports.">
-  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🚀</text></svg>">
+  <title>Company Data Hunter | Live Web Intelligence</title>
+  <meta name="description" content="AI-driven company data discovery powered by SerpApi Google search and Groq intelligence. Research any business instantly.">
 </head>
 <body>
 <div class="container">
 
+  <!-- HEADER -->
   <header class="header">
-    <div class="badge">🚀 GROQ · LLAMA 3.3 70B · HIGH SPEED</div>
+    <div class="badge">🌐 LIVE GOOGLE SEARCH · GROQ EXTRACT · REAL DATA</div>
     <h1>Company<br>Data Hunter</h1>
-    <p>Company naam daalo — website, email, phone, LinkedIn, socials sab milega. High speed research powered by Groq.</p>
+    <p>We search the live web via SerpApi and extract business intelligence using Groq. Deep research, even for small businesses.</p>
   </header>
 
-  <!-- API Key Setup Section -->
-  <section class="api-setup card-gradient">
-    <div class="api-setup-title">
-      <span class="panel-icon">🔑</span> 
-      Groq API Key (Fast & High Limits)
+  <!-- HOW IT WORKS FLOW -->
+  <div class="flow">
+    <div class="flow-step"><span class="num">1</span> Identify Target</div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-step"><span class="num">2</span> 🌐 SerpApi Search</div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-step"><span class="num">3</span> ⚡ Groq Extraction</div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-step"><span class="num">4</span> 📊 High Quality Results</div>
+  </div>
+
+  <!-- API CONFIGURATION GRID -->
+  <section class="api-grid">
+    <!-- SerpApi Configuration -->
+    <div class="api-card" id="serpCard">
+      <div class="api-card-header">
+        <div class="api-logo serpapi">🌐</div>
+        <div class="api-card-info">
+          <h3>SerpApi — Live Search</h3>
+          <p>Maps the real-time web</p>
+        </div>
+        <span class="api-status idle" id="serpStatus">NOT SET</span>
+      </div>
+      <div class="api-input-row">
+        <input type="password" class="api-input" id="serpKey" placeholder="SerpApi Key (xxxxxxx...)">
+        <button class="btn-primary" onclick="window.saveSerp()" style="padding: 10px 18px; font-size: 13px;">Save</button>
+        <button class="btn-sm" onclick="window.toggleVis('serpKey')">👁</button>
+      </div>
+      <div class="api-hint">
+        ↳ Get free key: <a href="https://serpapi.com/manage-api-key" target="_blank">serpapi.com</a>. 100 free searches/month. No CC required.
+      </div>
     </div>
-    <div class="api-row">
-      <input type="password" class="api-input" id="apiKeyInput" placeholder="gsk_... (Groq Key paste karo)">
-      <button class="btn-primary" onclick="saveApiKey()">Save Key</button>
-      <button class="btn-secondary" onclick="toggleVis()">Show/Hide</button>
-    </div>
-    <div class="api-hint">
-      ↳ Get free key: <a href="https://console.groq.com/keys" target="_blank">console.groq.com</a> &rarr; <em>"Create API Key"</em>. 
-      <br><strong>Ultra Fast • 500 requests/day • Perfect for high-speed hunting.</strong>
-    </div>
-    <div class="api-saved" id="apiSaved">
-      <span class="status-dot"></span> Groq Integration Ready. Key securely stored.
+
+    <!-- Groq Configuration -->
+    <div class="api-card" id="groqCard">
+      <div class="api-card-header">
+        <div class="api-logo groq">⚡</div>
+        <div class="api-card-info">
+          <h3>Groq — AI Engine</h3>
+          <p>Llama 3.3 70B extraction</p>
+        </div>
+        <span class="api-status idle" id="groqStatus">NOT SET</span>
+      </div>
+      <div class="api-input-row">
+        <input type="password" class="api-input" id="groqKey" placeholder="gsk_... (Groq Key)">
+        <button class="btn-primary" onclick="window.saveGroq()" style="padding: 10px 18px; font-size: 13px;">Save</button>
+        <button class="btn-sm" onclick="window.toggleVis('groqKey')">👁</button>
+      </div>
+      <div class="api-hint">
+        ↳ Get free key: <a href="https://console.groq.com/keys" target="_blank">console.groq.com</a>. 500 req/day. No CC required.
+      </div>
     </div>
   </section>
 
-  <!-- Interactive Controls -->
-  <nav class="mode-toggle">
-    <button class="mode-btn active" onclick="switchMode('single')" id="btn-single">🔍 Single Company</button>
-    <button class="mode-btn" onclick="switchMode('excel')" id="btn-excel">📊 Excel Bulk Mode</button>
+  <!-- NAVIGATION TABS -->
+  <nav class="tabs">
+    <button class="tab-btn active" onclick="window.switchTab('single')" id="btn-single">🔍 Quick Check</button>
+    <button class="tab-btn" onclick="window.switchTab('excel')" id="btn-excel">📊 Excel Batch Sync</button>
   </nav>
 
-  <!-- Single Intelligence Panel -->
+  <!-- SINGLE SEARCH PANEL -->
   <main class="panel active" id="panel-single">
-    <div class="panel-title"><div class="panel-icon">🔍</div> Quick Search</div>
+    <div class="panel-title"><div class="picon">🔍</div> Business Intelligence</div>
     <div class="search-row">
       <input type="text" class="search-input" id="companyInput"
-             placeholder="e.g. Infosys, Zomato, Reliance Industries, Amazon India..."
-             aria-label="Company name">
-      <button class="btn-primary" id="searchBtn" onclick="searchSingle()">
+             placeholder="e.g. Divisa Herbals, Zomato, Reliance Industries, Google India..."
+             aria-label="Enter company name">
+      <button class="btn-primary" id="searchBtn" onclick="window.searchSingle()">
         Search Intel 
         <svg fill="currentColor" width="18" height="18" viewBox="0 0 24 24"><path d="M16.01 11H4v2h12.01v3L20 12l-3.99-4v3z"/></svg>
       </button>
     </div>
-    <div class="error-msg" id="singleError"></div>
+    <div class="err" id="singleError"></div>
   </main>
 
-  <!-- Excel Bulk Panel -->
+  <!-- EXCEL BATCH PANEL -->
   <section class="panel" id="panel-excel">
-    <div class="panel-title"><div class="panel-icon">📊</div> Excel Research</div>
-    <p style="color:var(--muted); font-size:14px; margin-bottom:24px; line-height:1.7;">
-      Excel upload karo — <strong style="color:var(--text)">Column A = Company Names</strong>, baaki columns automatic populate honge.
+    <div class="panel-title"><div class="picon">📊</div> Batch Research Queue</div>
+    <p style="color:var(--muted); font-size:13px; margin-bottom:20px; line-height:1.7;">
+      Upload Excel: <strong style="color:var(--text)">Column A contains Company Names</strong>. Other headers will be mapped to AI extraction points.
     </p>
 
     <div class="upload-area" id="uploadArea" onclick="document.getElementById('fileInput').click()">
       <div class="upload-icon">📂</div>
-      <h3>Excel File Yahan Drop Karo</h3>
+      <h3>Drop Business List</h3>
       <p>Supports .xlsx, .xls, .csv</p>
     </div>
     <input type="file" id="fileInput" accept=".xlsx,.xls,.csv" aria-label="Upload File">
 
     <div class="file-info" id="fileInfo">
-      <span style="font-size:28px">📋</span>
-      <div class="file-info-text">
-        <strong id="fileName"></strong>
-        <span id="fileStats"></span>
+      <span style="font-size:24px">📋</span>
+      <div class="fi-text">
+        <strong id="fileName">data.xlsx</strong>
+        <span id="fileStats">0 records pending</span>
       </div>
-      <button class="btn-small" onclick="clearFile()">✕</button>
+      <button class="btn btn-sm" onclick="window.clearFile()">✕</button>
     </div>
 
-    <div id="headersPreview" style="display:none; margin-top:20px;">
-      <div style="font-family:'Space Mono',monospace; font-size:11px; color:var(--muted); margin-bottom:12px; text-transform:uppercase; letter-spacing:1px;">Detected Headers:</div>
-      <div class="headers-row" id="headerTags"></div>
+    <div id="hdrPreview" style="display:none; margin-top:20px;">
+      <div style="font-family:'Space Mono',monospace; font-size:10px; color:var(--muted); margin-bottom:10px; text-transform:uppercase; letter-spacing:1.5px;">Detected Schema:</div>
+      <div class="headers-row" id="hdrTags"></div>
     </div>
 
-    <div id="companiesPreview" style="display:none; margin-top:20px;">
-      <div style="font-family:'Space Mono',monospace; font-size:11px; color:var(--muted); margin-bottom:12px; text-transform:uppercase; letter-spacing:1px;">Company Queue:</div>
-      <div class="company-list" id="companyListPreview"></div>
+    <div id="coPreview" style="display:none; margin-top:20px;">
+      <div style="font-family:'Space Mono',monospace; font-size:10px; color:var(--muted); margin-bottom:10px; text-transform:uppercase; letter-spacing:1.5px;">Intel Queue:</div>
+      <div class="clist" id="coList"></div>
     </div>
 
-    <div style="margin-top:32px;">
-      <button class="btn-primary" onclick="searchBulk()" id="bulkSearchBtn" disabled style="width: 100%; justify-content: center">
-        🚀 Start Batch Research
+    <div style="margin-top:24px;">
+      <button class="btn-primary" onclick="window.doBulk()" id="bulkBtn" disabled style="width: 100%; justify-content: center">
+        🚀 Start Batch Extraction
       </button>
     </div>
 
-    <div class="info-box">
-      ⚡ <strong>Performance:</strong> Groq is very fast. 2.5s delay added per search for stability on free tier. 
+    <div class="infobox">
+      ✅ **Deep Web Crawl:** We perform real Google searches via SerpApi—Divisa Herbals or local SMBs will be found! ⚡ ~3 sec delay applied in batch mode.
     </div>
-
-    <div class="error-msg" id="excelError"></div>
+    <div class="err" id="excelError"></div>
   </section>
 
-  <!-- Global Loader -->
+  <!-- GLOBAL LOADER -->
   <div class="loading" id="loadingDiv">
-    <div class="spinner"></div>
-    <div class="loading-text" id="loadingText">Decrypting business intel<span>...</span></div>
-    <div class="progress-bar" id="progressBar">
-      <div class="progress-fill" id="progressFill"></div>
+    <div class="spinner-wrap">
+      <svg width="70" height="70" viewBox="0 0 60 60">
+        <circle cx="30" cy="30" r="24" fill="none" stroke="#2a2a3e" stroke-width="4"/>
+        <circle cx="30" cy="30" r="24" fill="none" stroke="#f97316" stroke-width="4"
+                stroke-dasharray="60 96" stroke-linecap="round"/>
+      </svg>
     </div>
+    <div class="load-company" id="loadCompany"></div>
+    <div class="load-steps">
+      <div class="load-step" id="step1">🌐 Google Search Phase</div>
+      <div class="load-step" id="step2">⚡ AI Extraction Phase</div>
+    </div>
+    <div class="pbar" id="pbar"><div class="pfill" id="pfill"></div></div>
   </div>
 
-  <!-- Response Section -->
-  <section class="results-section" id="resultsSection">
+  <!-- RESULTS SECTION -->
+  <section class="results" id="resultsDiv">
     <div class="action-bar">
-      <div class="result-count"><strong id="resultCount">0</strong> results discovered</div>
+      <div class="rcount"><strong id="rcount">0</strong> companies researched</div>
       <div style="display: flex; gap: 10px;">
-        <button class="btn-secondary" onclick="downloadExcel()">
-          <span>📥</span> Export Result
-        </button>
-        <button class="btn-secondary" onclick="clearResults()">
-          <span>🗑️</span> Reset
-        </button>
+        <button class="btn-secondary" onclick="window.downloadXlsx()">⬇️ Export XLSX</button>
+        <button class="btn-secondary" onclick="window.clearResults()">🗑️ Reset</button>
       </div>
     </div>
-    <div id="resultsContainer"></div>
+    <div id="cardsDiv" style="margin-top:20px;"></div>
   </section>
 
 </div>
