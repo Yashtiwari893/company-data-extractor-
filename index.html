@@ -17,47 +17,47 @@
     </div>
     
     <div class="inline-block px-5 py-1.5 bg-white border border-brand-border rounded-full text-brand-green text-[11px] font-bold tracking-widest uppercase shadow-sm">
-      🚀 Enterprise-Grade Data Hunting
+      🚀 Enterprise High-Speed Data Sync
     </div>
     
-    <h1 class="text-5xl md:text-6xl font-bold leading-tight">Company <br> Data Hunter</h1>
-    <p class="text-xl text-brand-muted max-w-2xl mx-auto font-medium">11za cloud research engine. Unified search via <span class="text-brand-navy font-semibold">Serper.dev</span> and AI-extraction via <span class="text-brand-navy font-semibold">Groq Intelligence</span>.</p>
+    <h1 class="text-5xl md:text-6xl font-bold leading-tight">11za Intelligence <br> Data Hunter</h1>
+    <p class="text-xl text-brand-muted max-w-2xl mx-auto font-medium">Built by <span class="text-brand-navy font-semibold">11za Cloud</span>. Proprietary web-crawling technology combined with advanced <span class="text-brand-navy font-semibold">Predictive AI Extraction</span> for deep business insights.</p>
   </header>
 
   <!-- WORKFLOW STEPS -->
   <div class="hidden md:flex justify-center items-center gap-4 mb-20 text-brand-muted text-sm font-medium">
     <div class="flex items-center gap-2 px-4 py-2 bg-white rounded-xl border border-brand-border shadow-sm">
-      <div class="w-2 h-2 rounded-full bg-brand-green"></div> Target Identify
+      <div class="w-2 h-2 rounded-full bg-brand-green"></div> Target Profile
     </div>
     <div class="text-brand-border">→</div>
     <div class="flex items-center gap-2 px-4 py-2 bg-white rounded-xl border border-brand-border shadow-sm">
-       🌐 Web Search
+       🌐 11za Secure Crawl
     </div>
     <div class="text-brand-border">→</div>
     <div class="flex items-center gap-2 px-4 py-2 bg-white rounded-xl border border-brand-border shadow-sm">
-       ⚡ AI Extract
+       ⚡ AI Insight Parser
     </div>
     <div class="text-brand-border">→</div>
     <div class="flex items-center gap-2 px-4 py-2 bg-white rounded-xl border border-brand-green/30 shadow-sm text-brand-green">
-       📊 Intel Report
+       📊 Verified Lead Report
     </div>
   </div>
 
   <!-- 11za CONNECTED ENGINE STATUS -->
   <div class="flex items-center justify-center gap-6 mb-16 text-xs font-bold tracking-widest text-brand-muted uppercase">
     <div class="flex items-center gap-2">
-      <span class="w-2 h-2 rounded-full bg-brand-green animate-pulse"></span> 11za Search Connector Active
+      <span class="w-2 h-2 rounded-full bg-brand-green animate-pulse"></span> 11za Cloud Stream Connected
     </div>
     <div class="w-px h-4 bg-brand-border"></div>
     <div class="flex items-center gap-2">
-      <span class="w-2 h-2 rounded-full bg-brand-green animate-pulse"></span> Groq Engine Integrated
+      <span class="w-2 h-2 rounded-full bg-brand-green animate-pulse"></span> Intelligence Engine Encrypted
     </div>
   </div>
 
   <!-- NAVIGATION TABS -->
   <div class="flex justify-center p-2 mb-10 bg-white/50 backdrop-blur-sm border border-brand-border rounded-2xl w-fit mx-auto shadow-sm">
     <button id="btn-single" onclick="window.switchTab('single')" class="tab-btn active">🔍 Quick Lead Scan</button>
-    <button id="btn-excel" onclick="window.switchTab('excel')" class="tab-btn">📊 Excel Batch Sync</button>
+    <button id="btn-excel" onclick="window.switchTab('excel')" class="tab-btn">📊 Bulk Growth Batch</button>
   </div>
 
   <!-- PANELS -->
@@ -67,32 +67,32 @@
     <section id="panel-single" class="panel glass-card p-10 active">
       <div class="flex items-center gap-3 mb-8">
         <div class="p-2 bg-brand-green/5 text-brand-green rounded-lg ring-1 ring-brand-green/20">🔍</div>
-        <h2 class="text-2xl font-bold">Business Intel Scan</h2>
+        <h2 class="text-2xl font-bold">11za Quick Scan</h2>
       </div>
       
       <div class="flex flex-col md:flex-row gap-4">
         <div class="flex-1 relative group">
-          <input type="text" id="companyInput" placeholder="e.g. Zomato, Divisa Herbals, Google India..." 
+          <input type="text" id="companyInput" placeholder="Enter company name to start hunting..." 
                  class="w-full text-xl font-medium px-6 py-5 rounded-2xl bg-slate-50 border-2 border-slate-100 focus:border-brand-green focus:bg-white outline-none transition-all shadow-inner group-hover:border-slate-200">
         </div>
         <button id="searchBtn" onclick="window.searchSingle()" class="btn-primary flex items-center justify-center gap-2 whitespace-nowrap min-w-[200px]">
-          Generate Intel <span class="text-xl">→</span>
+          Generate Intelligence <span class="text-xl">→</span>
         </button>
       </div>
       <div id="singleError" class="mt-4 p-4 rounded-xl bg-red-50 text-red-600 border border-red-100 hidden"></div>
     </section>
 
     <!-- EXCEL BATCH -->
-    <section id="panel-excel" class="panel glass-card p-10">
+    <section id="panel-excel" class="panel glass-card p-10 hidden">
       <div class="flex items-center gap-3 mb-8">
         <div class="p-2 bg-brand-green/5 text-brand-green rounded-lg ring-1 ring-brand-green/20">📊</div>
-        <h2 class="text-2xl font-bold">Bulk Lead Research</h2>
+        <h2 class="text-2xl font-bold">11za Batch Intelligence</h2>
       </div>
       
       <div id="uploadArea" onclick="document.getElementById('fileInput').click()" class="border-2 border-dashed border-slate-200 rounded-3xl p-12 text-center hover:border-brand-green hover:bg-brand-green/[0.02] cursor-pointer transition-all bg-slate-50/30 group">
         <div class="text-5xl mb-4 grayscale group-hover:grayscale-0 transition-all">📂</div>
-        <h3 class="text-xl font-bold mb-2">Drop Prospect Spreadsheet</h3>
-        <p class="text-brand-muted font-medium mb-6">Column A should contain Company Names. Supports .xlsx, .xls, .csv</p>
+        <h3 class="text-xl font-bold mb-2">Drop Growth List</h3>
+        <p class="text-brand-muted font-medium mb-6">Column A must contain Target Business Names. Supports XL/CSV.</p>
         <button class="bg-white border border-brand-border text-brand-navy font-bold px-6 py-2.5 rounded-xl hover:bg-slate-100 transition-colors shadow-sm">
           Or Select File Manually
         </button>
@@ -102,31 +102,31 @@
       <div id="fileInfo" class="hidden mt-6 p-6 bg-white border border-brand-border rounded-2xl items-center gap-4 animate-slide-up">
         <div class="text-3xl">📋</div>
         <div class="flex-1">
-          <strong id="fileName" class="text-brand-navy font-bold text-lg leading-none">data.xlsx</strong>
-          <span id="fileStats" class="block text-brand-muted text-sm mt-1 font-mono">0 records pending research</span>
+          <strong id="fileName" class="text-brand-navy font-bold text-lg leading-none">leads.xlsx</strong>
+          <span id="fileStats" class="block text-brand-muted text-sm mt-1 font-mono">0 records ready for sync</span>
         </div>
         <button onclick="window.clearFile()" class="p-2 hover:bg-slate-100 text-brand-muted rounded-xl transition-colors">✕</button>
       </div>
 
       <div id="hdrPreview" class="hidden mt-8 space-y-4 animate-slide-up">
-        <div class="text-xs text-brand-muted font-bold tracking-widest uppercase">Schema Detection:</div>
+        <div class="text-xs text-brand-muted font-bold tracking-widest uppercase">Schema Mapping:</div>
         <div id="hdrTags" class="flex flex-wrap gap-2"></div>
       </div>
 
       <div id="coPreview" class="hidden mt-10 space-y-4 animate-slide-up">
-        <div class="text-xs text-brand-muted font-bold tracking-widest uppercase">Lead Intel Queue:</div>
+        <div class="text-xs text-brand-muted font-bold tracking-widest uppercase">Research Queue:</div>
         <div id="coList" class="space-y-2"></div>
       </div>
 
       <button id="bulkBtn" onclick="window.doBulk()" disabled 
               class="w-full mt-10 btn-primary disabled:opacity-30 disabled:hover:scale-100 disabled:cursor-not-allowed">
-        🚀 Start Automated Intelligence Research
+        🚀 Start Automated Intelligence Sync
       </button>
 
-      <div class="mt-8 p-6 bg-white border border-brand-border rounded-2xl flex gap-4">
-        <div class="text-2xl">⚡</div>
+      <div class="mt-8 p-6 bg-white border border-brand-border rounded-2xl flex gap-4 text-left">
+        <div class="text-2xl">🛡️</div>
         <p class="text-brand-muted text-sm leading-relaxed">
-          <strong>11za Cloud Engine</strong> uses live web crawling via Serper.dev. Even small businesses and local SMEs will be accurately discovered. Batch research includes a 2-second stability delay.
+          <strong>11za Data Stream</strong> utilizes proprietary high-frequency crawlers and neural extraction models to find contact intel. Perfect for local boutiques, SMEs, and national enterprises.
         </p>
       </div>
       <div id="excelError" class="mt-4 p-4 rounded-xl bg-red-50 text-red-600 border border-red-100 hidden"></div>
@@ -135,16 +135,16 @@
     <!-- LOADING STATE -->
     <div id="loadingDiv" class="hidden text-center py-20 animate-slide-up">
       <div class="w-16 h-16 border-4 border-slate-100 border-t-brand-green rounded-full mx-auto mb-8 animate-spin-custom"></div>
-      <div id="loadCompany" class="text-2xl font-extrabold text-brand-navy mb-4">Establishing Context...</div>
+      <div id="loadCompany" class="text-2xl font-extrabold text-brand-navy mb-4">Connecting to 11za Cloud...</div>
       
       <div class="flex justify-center items-center gap-12 font-medium text-brand-muted text-sm">
         <div id="step1" class="flex items-center gap-2 transition-all">
           <span class="w-6 h-6 rounded-full bg-slate-100 flex items-center justify-center text-[10px] ring-1 ring-slate-200">1</span>
-          Search Logic
+          11za Digital Crawl
         </div>
         <div id="step2" class="flex items-center gap-2 transition-all">
           <span class="w-6 h-6 rounded-full bg-slate-100 flex items-center justify-center text-[10px] ring-1 ring-slate-200">2</span>
-          Extraction AI
+          11za AI Parsing
         </div>
       </div>
 
@@ -157,11 +157,11 @@
     <section id="resultsDiv" class="hidden pt-12 animate-slide-up">
       <div class="flex flex-col md:flex-row justify-between items-center gap-6 mb-10 pb-10 border-b border-brand-border">
         <div class="text-xl font-bold bg-white px-6 py-2 rounded-full border border-brand-border shadow-sm">
-          <strong id="rcount" class="text-brand-green text-2xl mr-1">0</strong> <span class="text-brand-muted text-lg">Profiles Discovered</span>
+          <strong id="rcount" class="text-brand-green text-2xl mr-1">0</strong> <span class="text-brand-muted text-lg">Profiles Found</span>
         </div>
         <div class="flex gap-4">
           <button onclick="window.downloadXlsx()" class="btn-secondary flex items-center gap-2 hover:bg-slate-50 transition-colors">
-            <span class="text-lg">📥</span> Export Global Intelligence
+            <span class="text-lg">📥</span> Download Global Intel Report
           </button>
           <button onclick="window.clearResults()" class="p-3 bg-white border border-brand-border text-brand-muted rounded-xl hover:text-red-500 hover:border-red-200 transition-all">
             🗑️
@@ -177,8 +177,8 @@
 </div>
 
 <footer class="mt-20 py-16 text-center border-t border-brand-border text-brand-muted/70 text-sm font-medium">
-  Developed by <a href="https://www.11za.com" target="_blank" class="text-brand-green font-bold">11za Cloud</a>. <br>
-  The most accurate Enterprise Data Hunter platform.
+  Powered by <a href="https://www.11za.com" target="_blank" class="text-brand-green font-bold">11za Cloud Engine</a>. <br>
+  Proprietary Enterprise Data Hunter platform.
 </footer>
 
 <script type="module" src="/src/main.js"></script>
