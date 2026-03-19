@@ -1,7 +1,7 @@
 import * as XLSX from 'xlsx';
 import './style.css';
 
-// API Configuration - Internal 11za Gateway
+// API Configuration - Using relative path for Vercel Serverless compatibility
 const API_BASE = '/api';
 
 let currentMode = 'single';
@@ -50,7 +50,7 @@ window.switchTab = function(t) {
 // Single Research Handler
 window.searchSingle = async function() {
   const name = document.getElementById('companyInput').value.trim();
-  if (!name) return showErr('singleError', 'Business name required!');
+  if (!name) return showErr('singleError', 'Company ka naam daalo!');
 
   hideErr('singleError');
   const searchBtn = document.getElementById('searchBtn');
@@ -63,8 +63,8 @@ window.searchSingle = async function() {
     allResults = [result];
     renderCards([result]);
   } catch(e) {
-    console.error('11za Sync Error:', e.message);
-    showErr('singleError', 'Intelligence sync failed. System retrying...');
+    console.error(e);
+    showErr('singleError', e.message);
   } finally {
     searchBtn.disabled = false;
     hideLoad();
@@ -77,13 +77,13 @@ function processFile(file) {
     try {
       const wb = XLSX.read(e.target.result, { type: file.name.endsWith('.csv') ? 'binary' : 'array' });
       const rows = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { header: 1, defval: '' });
-      if (!rows || rows.length < 2) { showErr('excelError', 'Empty data set detected.'); return; }
+      if (!rows || rows.length < 2) { showErr('excelError', 'Data nahi mila file mein'); return; }
 
       uploadedHeaders = rows[0].map(h => String(h).trim()).filter(Boolean);
       companyNames = rows.slice(1).map(r => String(r[0] || '').trim()).filter(Boolean);
 
       document.getElementById('fileName').textContent = file.name;
-      document.getElementById('fileStats').textContent = `${companyNames.length} profiles queued for research`;
+      document.getElementById('fileStats').textContent = `${companyNames.length} leads pending research`;
       document.getElementById('fileInfo').classList.remove('hidden');
       document.getElementById('fileInfo').classList.add('flex');
 
@@ -93,12 +93,12 @@ function processFile(file) {
       document.getElementById('coPreview').classList.remove('hidden');
       const prev = companyNames.slice(0, 5);
       document.getElementById('coList').innerHTML =
-        prev.map((n, i) => `<div class="flex items-center gap-3 p-3 bg-white border border-brand-border rounded-xl text-sm"><span class="text-brand-green font-bold text-xs">0${i+1}</span> ${n}</div>`).join('') +
-        (companyNames.length > 5 ? `<div class="text-xs text-brand-muted text-center pt-2 italic">...+${companyNames.length - 5} records in pool</div>` : '');
+        prev.map((n, i) => `<div class="flex items-center gap-3 p-3 bg-white border border-brand-border rounded-xl text-sm"><span class="text-brand-green font-bold text-xs">#${i+1}</span> ${n}</div>`).join('') +
+        (companyNames.length > 5 ? `<div class="text-xs text-brand-muted text-center pt-2 italic">...+${companyNames.length - 5} records in queue</div>` : '');
 
       document.getElementById('bulkBtn').disabled = false;
       hideErr('excelError');
-    } catch(err) { showErr('excelError', 'Format Error: Update file to .xlsx or .csv'); }
+    } catch(err) { showErr('excelError', 'File Error: ' + err.message); }
   };
   file.name.endsWith('.csv') ? reader.readAsBinaryString(file) : reader.readAsArrayBuffer(file);
 }
@@ -130,7 +130,7 @@ window.doBulk = async function() {
     try {
       allResults.push(await researchCompany(name, uploadedHeaders));
     } catch(e) {
-      allResults.push({ 'Business Profile': name, 'Status': 'Manual Sync Required' });
+      allResults.push({ 'Company Name': name, 'Error': e.message });
     }
 
     if (i < companyNames.length - 1) await new Promise(r => setTimeout(r, 2000));
@@ -142,7 +142,7 @@ window.doBulk = async function() {
   renderCards(allResults);
 }
 
-// ── 11ZA INTELLIGENCE ORCHESTRATOR ───────────────────────────
+// ── RESEARCH ORCHESTRATOR ───────────────────────────
 async function researchCompany(company, headers) {
   setLoadStep(1);
   const searchData = await search11za(company);
@@ -152,7 +152,7 @@ async function researchCompany(company, headers) {
   return result;
 }
 
-// ── 11ZA DIGITAL CRAWL ─────────────────────────────
+// ── SEARCH THROUGH PROXY ─────────────────────────────
 async function search11za(company) {
   let combined = '';
   const queries = [`"${company}" official contact website email phone`, `"${company}" locals linkedin socials`];
@@ -169,38 +169,38 @@ async function search11za(company) {
       const data = await resp.json();
       if (data.knowledgeGraph) {
         const kg = data.knowledgeGraph;
-        combined += `[DATA] ${kg.title} | ${kg.website} | ${kg.phoneNumber} | ${kg.description}\n`;
+        combined += `[INTEL] ${kg.title} | ${kg.website} | ${kg.phoneNumber} | ${kg.description}\n`;
       }
-      (data.organic || []).slice(0, 4).forEach(r => combined += `[INTEL] ${r.snippet}\n\n`);
-    } catch(e) { console.warn('Crawl intermittent issue'); }
+      (data.organic || []).slice(0, 4).forEach(r => combined += `[WEB] ${r.snippet}\n\n`);
+    } catch(e) { console.warn(e); }
   }
-  return combined || `No public records available for ${company}.`;
+  return combined || `Limited data found for ${company}.`;
 }
 
-// ── 11ZA NEURAL PARSING ─────────────────────────
+// ── EXTRACTION THROUGH PROXY ─────────────────────────
 async function extract11za(company, context, headers) {
-  const fields = (headers && headers.length > 1) ? headers.slice(1) : ['Website', 'Email', 'Phone', 'LinkedIn', 'Corporate Summary'];
+  const fields = (headers && headers.length > 1) ? headers.slice(1) : ['Website', 'Email', 'Phone', 'LinkedIn', 'Description'];
 
   const resp = await fetch(`${API_BASE}/extract`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
       messages: [
-        { role: 'system', content: 'You are 11za Neural Engine. Extract corporate data. JSON only.' },
-        { role: 'user', content: `Target: "${company}"\nPool: ${context.slice(0, 3000)}\nKeys: ${fields.join(', ')}` }
+        { role: 'system', content: 'You are 11za Intelligence Engine. Extract company data from search results. JSON only.' },
+        { role: 'user', content: `Target: "${company}"\nContext: ${context.slice(0, 3000)}\nSchema keys: ${fields.join(', ')}` }
       ],
       response_format: { type: 'json_object' }
     })
   });
   
-  if (!resp.ok) throw new Error(`Neural Link Offline ${resp.status}`);
+  if (!resp.ok) throw new Error(`Backend Engine Error ${resp.status}`);
   const data = await resp.json();
   const raw = data?.choices?.[0]?.message?.content || '{}';
   try {
     const parsed = JSON.parse(raw);
-    parsed['Business Profile'] = parsed['Business Profile'] || company;
+    parsed['Company Name'] = parsed['Company Name'] || company;
     return parsed;
-  } catch (e) { return { 'Business Profile': company, 'Status': 'Neural Sync Interrupted' }; }
+  } catch (e) { return { 'Company Name': company, 'Status': 'Manual Verification Needed' }; }
 }
 
 function renderCards(results) {
@@ -210,8 +210,8 @@ function renderCards(results) {
   document.getElementById('resultsDiv').classList.remove('hidden');
 
   results.forEach((r, idx) => {
-    const name = r['Business Profile'] || r['Company Name'] || 'Enterprise Profile';
-    const fields = Object.entries(r).filter(([k]) => k !== 'Business Profile' && k !== 'Company Name');
+    const name = r['Company Name'] || 'Business Record';
+    const fields = Object.entries(r).filter(([k]) => k !== 'Company Name');
     const card = document.createElement('div');
     card.className = 'glass-card overflow-hidden animate-slide-up';
     card.style.animationDelay = `${idx * 0.05}s`;
@@ -219,10 +219,10 @@ function renderCards(results) {
     card.innerHTML = `
       <div class="px-8 py-6 bg-slate-50/50 border-b border-brand-border flex justify-between items-center">
         <div>
-          <h3 class="text-xl font-bold text-brand-navy">💎 ${name}</h3>
-          <p class="text-xs text-brand-muted mt-0.5">${fields.length} data vectors mapped · #${idx+1}</p>
+          <h3 class="text-xl font-bold text-brand-navy">💬 ${name}</h3>
+          <p class="text-xs text-brand-muted mt-0.5">${fields.length} data points extracted · #${idx+1}</p>
         </div>
-        <div class="px-4 py-1.5 bg-emerald-50 text-emerald-600 text-[10px] font-bold rounded-full ring-1 ring-emerald-200 uppercase">Verified Sync</div>
+        <div class="px-4 py-1.5 bg-emerald-50 text-emerald-600 text-[10px] font-bold rounded-full ring-1 ring-emerald-200">11ZA VERIFIED</div>
       </div>
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-px bg-slate-100">
         ${fields.map(([k, v]) => `
@@ -235,15 +235,15 @@ function renderCards(results) {
   });
 }
 
-function isNA(v) { return !v || ['n/a','na','null','undefined','not found','missing'].includes(String(v).trim().toLowerCase()); }
+function isNA(v) { return !v || ['N/A','n/a','NA','null','undefined','not found'].includes(String(v).trim().toLowerCase()); }
 
 function fmtVal(key, val) {
-  if (isNA(val)) return 'Data Unavailable';
+  if (isNA(val)) return 'N/A';
   const k = key.toLowerCase(), v = String(val), h = v.startsWith('http');
-  if (k.includes('website')) return `<a href="${h?v:'https://'+v}" target="_blank" class="text-brand-green font-bold text-xs px-3 py-1 bg-brand-green/10 rounded-lg">Access Site →</a>`;
-  if (k.includes('linkedin')) return `<a href="${h?v:'https://linkedin.com/company/'+v}" target="_blank" class="text-brand-green underline underline-offset-4">LinkedIn</a>`;
-  if (k.includes('email')) return `<a href="mailto:${v}" class="text-brand-green border-b border-dotted border-brand-green">${v}</a>`;
-  if (k.includes('phone') || k.includes('number')) return `<span class="text-brand-navy font-semibold">📞 ${v}</span>`;
+  if (k.includes('website')) return `<a href="${h?v:'https://'+v}" target="_blank" class="text-brand-green font-bold">Launch Site</a>`;
+  if (k.includes('linkedin')) return `<a href="${h?v:'https://linkedin.com/company/'+v}" target="_blank" class="text-brand-green">View Handle</a>`;
+  if (k.includes('email')) return `<a href="mailto:${v}" class="text-brand-green">${v}</a>`;
+  if (k.includes('phone') || k.includes('number')) return `<span class="text-brand-navy">📞 ${v}</span>`;
   return v;
 }
 
@@ -251,12 +251,12 @@ window.downloadXlsx = function() {
   if (!allResults.length) return;
   const keys = new Set();
   allResults.forEach(r => Object.keys(r).forEach(k => keys.add(k)));
-  const ordered = ['Business Profile', ...Array.from(keys).filter(k => k !== 'Business Profile')];
+  const ordered = ['Company Name', ...Array.from(keys).filter(k => k !== 'Company Name')];
   const rows = [ordered, ...allResults.map(r => ordered.map(k => r[k] || 'N/A'))];
   const wb = XLSX.utils.book_new();
   const ws = XLSX.utils.aoa_to_sheet(rows);
-  XLSX.utils.book_append_sheet(wb, ws, 'Intelligence Sync');
-  XLSX.writeFile(wb, `11za_DataHunter_Report.xlsx`);
+  XLSX.utils.book_append_sheet(wb, ws, 'Insight Report');
+  XLSX.writeFile(wb, `11za_Corporate_Intelligence.xlsx`);
 }
 
 window.clearResults = function() { allResults = []; hideResults(); document.getElementById('cardsDiv').innerHTML = ''; }
@@ -269,7 +269,7 @@ function setLoadStep(step) {
   s2.classList.toggle('font-bold', step === 2);
 }
 function showLoad(name, idx, total) {
-  document.getElementById('loadCompany').textContent = total ? `SYNCING: ${name} (${idx+1}/${total})` : `SYNCING: ${name}`;
+  document.getElementById('loadCompany').textContent = total ? `INTELLIGENCE: ${name} (${idx+1}/${total})` : `HUNTING: ${name}`;
   document.getElementById('loadingDiv').classList.remove('hidden');
   setLoadStep(1);
 }
